@@ -1,0 +1,23 @@
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+.env
+
+# generated data / models
+*.db
+*.csv
+*.keras
+*.pt
+*.png
+*.jpg
+links.json
+tasks.json
+
+# os / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
