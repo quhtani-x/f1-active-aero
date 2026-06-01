@@ -2,7 +2,7 @@ import math
 import sys
 import pygame
 
-
+# DISCLAIMER , some comments has been added by ai to explain the code , as the code had a bunch of random comments initially  and a lot of commented code 
 
 W, H = 1000, 640
 pygame.init()
