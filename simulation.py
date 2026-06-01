@@ -2,12 +2,7 @@ import math
 import sys
 import pygame
 
-# F1 ACTIVE AERO controller.
-# the idea: the rear wing angle changes automatically while driving.
-# on a straight i drop the wing flat -> less drag -> higher top speed (like DRS).
-# in a corner i raise the wing -> more downforce -> more grip -> faster cornering.
-# an AI controller looks ahead at the track curvature and decides the angle.
-# the whole thing runs in a visual window with live telemetry.
+
 
 W, H = 1000, 640
 pygame.init()
@@ -17,12 +12,12 @@ font = pygame.font.SysFont("consolas", 18)
 big = pygame.font.SysFont("consolas", 26, bold=True)
 clock = pygame.time.Clock()
 
-# ----- build a track as a smooth closed loop (rounded rectangle) -----
+# build a track as a closed loop (rounded rectangle) 
 def build_track():
     pts = []
     cx, cy = W // 2, H // 2 + 20
     rx, ry = 360, 200      # half width / height of the straights
-    corner = 120           # corner radius
+    corner = 120           
     # walk around the rounded rectangle, sampling points
     for a in range(0, 360, 2):
         rad = math.radians(a)
@@ -50,8 +45,8 @@ def curvature_at(i):
     return d
 
 
-# ----- car / physics state -----
-pos_i = 0.0          # index along the track (float, wraps around)
+#some physics
+pos_i = 0.0          # index along the track
 speed = 60.0         # km/h-ish, just a number for feel
 wing = 0.5           # 0 = flat (fast/low drag), 1 = full (grippy/high drag)
 
@@ -62,7 +57,7 @@ def target_speed(curv, wing_angle):
     if curv < 0.02:
         # basically a straight: top speed limited by drag (low wing = faster)
         return 340 - wing_angle * 120
-    # corner: tighter (more curv) = slower, but more wing helps
+    # corner tighter (more curv) = slower, but more wing helps
     return max(70, grip / (curv * 14 + 0.4))
 
 
@@ -87,7 +82,7 @@ while running:
 
     i = int(pos_i) % N
     curv = curvature_at(i)
-    # look ~25 points ahead so the wing moves BEFORE the corner, like a real driver
+    # look around 25 points ahead so the wing moves BEFORE the corner, like a real driver
     look_curv = max(curvature_at((i + k) % N) for k in range(8, 28))
 
     # ai decides target wing, the actuator moves toward it smoothly (not instant)
@@ -100,8 +95,7 @@ while running:
 
     # advance along the track, faster speed = more points per frame
     pos_i = (pos_i + speed * 0.0009 * N / 60) % N
-
-    # ---------- draw ----------
+    
     screen.fill((22, 24, 30))
 
     # track
@@ -122,21 +116,20 @@ while running:
     pygame.draw.line(screen, (255, 255, 255), (cx, cy),
                      (cx + 18 * math.cos(heading), cy + 18 * math.sin(heading)), 3)
 
-    # ---------- HUD ----------
+    #hud
     mode = "STRAIGHT  (DRS open)" if look_curv < 0.015 else "CORNER  (downforce)"
     screen.blit(big.render("F1 ACTIVE AERO", True, (255, 255, 255)), (24, 18))
     screen.blit(font.render(f"mode:  {mode}", True, (200, 220, 255)), (24, 60))
     screen.blit(font.render(f"speed: {speed:5.0f} km/h", True, (220, 220, 220)), (24, 86))
 
-    # wing angle bar
+    # wing bar
     screen.blit(font.render("wing angle", True, (200, 200, 200)), (24, 120))
     pygame.draw.rect(screen, (60, 60, 70), (24, 144, 220, 22), border_radius=6)
     pygame.draw.rect(screen, (240, 120, 80), (24, 144, int(220 * wing), 22), border_radius=6)
     screen.blit(font.render(f"{wing*100:3.0f}%", True, (255, 255, 255)), (252, 145))
 
-    # a tiny side-view of the wing tilting
     wx, wy = 130, 230
-    angle = wing * 0.9  # radians of tilt
+    angle = wing * 0.9  
     dx, dy = 40 * math.cos(angle), 40 * math.sin(angle)
     pygame.draw.line(screen, (180, 180, 200), (wx - dx, wy - dy), (wx + dx, wy + dy), 8)
     screen.blit(font.render("rear wing", True, (150, 150, 160)), (wx - 40, wy + 24))
